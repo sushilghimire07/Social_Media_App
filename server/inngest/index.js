@@ -6,7 +6,7 @@ import sendEmail from "../configs/nodeMailer.js";
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "my-app" });
 
-// -------------------- User Sync Functions --------------------
+
 
 // Sync user creation from Clerk
 const syncUserCreation = inngest.createFunction(

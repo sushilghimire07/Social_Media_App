@@ -149,7 +149,6 @@ export const sendConnectionRequest = async (req, res) => {
     if (!existing) {
       const newConnection = await Connection.create({ from_user_id: userId, to_user_id: id });
 
-      // ✅ Trigger Inngest event here
       await inngest.send({
         name: "app/connection-request",
         data: { connectionId: newConnection._id },
@@ -167,8 +166,6 @@ export const sendConnectionRequest = async (req, res) => {
   }
 };
 
-
-// -------------------- ACCEPT CONNECTION REQUEST --------------------
 export const acceptConnectionRequest = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -194,8 +191,6 @@ export const acceptConnectionRequest = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-
-// -------------------- GET USER CONNECTIONS --------------------
 export const getUserConnections = async (req, res) => {
   try {
     const { userId } = req.auth();

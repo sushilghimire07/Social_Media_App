@@ -4,6 +4,9 @@ import "dotenv/config";
 import connectDB from "./configs/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import userRouter from "./routes/UserRoutes.js";
+import inngestRouter from "./inngest/serve.js";
+
+
 
 const app = express();
 await connectDB();
@@ -14,6 +17,8 @@ app.use(clerkMiddleware());
 
 app.get("/", (req, res) => res.send("Server is running"));
 
+app.use(inngestRouter); 
+      
 app.use("/api/user", userRouter);
 
 const PORT = process.env.PORT || 4000;
