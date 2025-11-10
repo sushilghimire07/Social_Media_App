@@ -132,11 +132,13 @@ export const sendConnectionRequest = async (req, res) => {
     const { userId } = req.auth();
     const { id } = req.body;
 
+    // Check last 24h requests
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const requests = await Connection.find({ from_user_id: userId, createdAt: { $gt: last24Hours } });
     if (requests.length >= 20)
       return res.json({ success: false, message: "You have sent more than 20 requests in 24h" });
 
+    // Check existing connection
     const existing = await Connection.findOne({
       $or: [
         { from_user_id: userId, to_user_id: id },
@@ -147,8 +149,11 @@ export const sendConnectionRequest = async (req, res) => {
     if (!existing) {
       const newConnection = await Connection.create({ from_user_id: userId, to_user_id: id });
 
-      // Trigger Inngest event for email
-      await inngest.send({ name: "app/connection-request", data: { connectionId: newConnection._id } });
+      // ✅ Trigger Inngest event here
+      await inngest.send({
+        name: "app/connection-request",
+        data: { connectionId: newConnection._id },
+      });
 
       return res.json({ success: true, message: "Connection request sent successfully" });
     } else if (existing.status === "accepted") {
@@ -161,6 +166,7 @@ export const sendConnectionRequest = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // -------------------- ACCEPT CONNECTION REQUEST --------------------
 export const acceptConnectionRequest = async (req, res) => {
