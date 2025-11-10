@@ -2,7 +2,7 @@ import fs from "fs";
 import User from "../models/User.js";
 import Connection from "../models/Connection.js";
 import imagekit from "../configs/imageKit.js";
-import { inngest } from "../inngest/functions.js";
+import { inngest } from "../inngest/index.js";
 
 // -------------------- GET USER DATA --------------------
 export const getUserData = async (req, res) => {

@@ -6,7 +6,7 @@ import {
   followUser,
   unfollowUser,
   sendConnectionRequest,
-  aceptConnectionRequest,
+  acceptConnectionRequest,
   getUserConnections
 } from "../controllers/UserController.js";
 import { protect } from "../middleware/auth.js";
@@ -31,7 +31,7 @@ router.post("/follow", protect, followUser);
 router.post("/unfollow", protect, unfollowUser);
 
 router.post('/connect',protect,sendConnectionRequest)
-router.post('/accept',protect,aceptConnectionRequest)
+router.post('/accept',protect,acceptConnectionRequest)
 router.post('/get',protect,getUserConnections)
 
 
