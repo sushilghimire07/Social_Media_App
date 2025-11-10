@@ -31,7 +31,7 @@ router.post("/follow", protect, followUser);
 router.post("/unfollow", protect, unfollowUser);
 
 router.post('/connect',protect,sendConnectionRequest)
-router.post('/connect',protect,aceptConnectionRequest)
+router.post('/accept',protect,aceptConnectionRequest)
 router.post('/get',protect,getUserConnections)
 
 
