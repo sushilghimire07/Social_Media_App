@@ -3,6 +3,8 @@ import User from "../models/User.js";
 import Connection from "../models/Connection.js";
 import imagekit from "../configs/imageKit.js";
 import { inngest } from "../inngest/index.js";
+import Post from "../models/Post.js";
+
 
 // -------------------- GET USER DATA --------------------
 export const getUserData = async (req, res) => {
@@ -212,3 +214,27 @@ export const getUserConnections = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+//getuser profile
+
+export const getUserProfiles=async(req,res)=>{
+
+
+  try {
+
+    const {profileId} = req.body;
+    const profile = await User.findById(profileId)
+    if(!profile){
+      return res.json({sucess:false,message:"Profile not found"})
+    }
+    const posts = await Post.find({user:profileId}).populate('user')
+    res.json({sucess:true,profile,posts})
+    
+  } catch (error) {
+    
+    console.log(err);
+    return res.status(500).json({ success: false, message: err.message });
+
+  }
+}
