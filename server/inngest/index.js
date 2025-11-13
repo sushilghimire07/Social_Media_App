@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Connection from "../models/Connection.js";
 import sendEmail from "../configs/nodeMailer.js";
 import Story from "../models/Story.js";
+import Message from '../models/Message.js'
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "my-app" });
@@ -151,7 +152,7 @@ const deleteStory = inngest.createFunction(
 
 const sendNotificationsOfUnseenMessages = inngest.createFunction(
   { id: "send-unseen-messages-notification" },
-  { cron: "TZ-Amrica/New_York 0 9  * * *" }, // Everyday 9AM
+  { cron: "TZ=America/New_York 0 9 * * *" }, // Every day at 9 AM New York time
   async ({ step }) => {
     const messages = await Message.find({ seen: false }).populate("to_user_id");
     const unseenCount = {};
@@ -160,6 +161,7 @@ const sendNotificationsOfUnseenMessages = inngest.createFunction(
       unseenCount[message.to_user_id._id] =
         (unseenCount[message.to_user_id._id] || 0) + 1;
     });
+
     for (const userId in unseenCount) {
       const user = await User.findById(userId);
 
@@ -175,9 +177,7 @@ const sendNotificationsOfUnseenMessages = inngest.createFunction(
             <div style="padding: 25px;">
               <h2 style="margin-top: 0;">Hi ${user.full_name},</h2>
               <p style="font-size: 16px; color: #333;">
-                You have <strong style="color: #10b981;">${
-                  unseenCount[userId]
-                }</strong> unseen message${unseenCount[userId] > 1 ? "s" : ""}.
+                You have <strong style="color: #10b981;">${unseenCount[userId]}</strong> unseen message${unseenCount[userId] > 1 ? "s" : ""}.
               </p>
               <p style="font-size: 15px; color: #555;">
                 Someone just sent you new messages. Don’t miss them!
@@ -203,17 +203,18 @@ const sendNotificationsOfUnseenMessages = inngest.createFunction(
           </div>
         </div>
       `;
- 
-      await sendEmail({
-        to:user.email,
-        subject,
-        body
-      })
 
+      await sendEmail({
+        to: user.email,
+        subject,
+        body,
+      });
     }
-    return {message:'Notification sent.'}
+
+    return { message: "Notification sent." };
   }
 );
+
 
 // Export all functions
 export const functions = [
