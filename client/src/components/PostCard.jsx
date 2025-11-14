@@ -1,33 +1,58 @@
 import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
 import React, { useState } from "react";
 import moment from "moment";
-import { dummyUserData } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useAuth } from "@clerk/clerk-react";
+import api from "../api/axios";
+import { toast } from "react-hot-toast";
 
 const PostCard = ({ post }) => {
-  const postWithHashtags = (content) => {
-    return content.replace(
+  const postWithHashtags = (content) =>
+    content.replace(
       /(#\w+)/g,
       '<span class="text-indigo-600 font-semibold">$1</span>'
     );
+
+  const [likes, setLikes] = useState(post.likes_count || []);
+  const currentUser = useSelector((state) => state.user.value);
+  const navigate = useNavigate();
+  const { getToken } = useAuth();
+
+  const handleLike = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await api.post(
+        "/api/post/like",
+        { postId: post._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
+        toast.success(data.message || "Post liked!");
+        setLikes((prev) =>
+          prev.includes(currentUser._id)
+            ? prev.filter((id) => id !== currentUser._id)
+            : [...prev, currentUser._id]
+        );
+      } else {
+        toast.error(data.message || "Could not like post");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
-
-  const [likes, setLikes] = useState(post.likes_count);
-  const currentUser = dummyUserData;
-
-  const handleLike = async (params) => {
-
-  };
-  const navigate = useNavigate()
 
   return (
     <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
-      <div onClick={()=>{
-        navigate('/profile/'+post.user._id)
-      }} className="inline-flex items-center gap-3 cursor-pointer">
+      {/* User Info */}
+      <div
+        onClick={() => navigate("/profile/" + post.user._id)}
+        className="inline-flex items-center gap-3 cursor-pointer"
+      >
         <img
-          src={post.user.profile_picture}
-          alt=""
+          src={post.user.profile_picture || "/default-avatar.png"}
+          alt={post.user.full_name}
           className="w-10 h-10 rounded-full shadow"
         />
         <div>
@@ -41,7 +66,7 @@ const PostCard = ({ post }) => {
         </div>
       </div>
 
-      {/* content */}
+      {/* Post Content */}
       {post.content && (
         <div
           className="text-gray-800 text-sm whitespace-pre-line"
@@ -49,39 +74,47 @@ const PostCard = ({ post }) => {
         />
       )}
 
-      {/* images */}
-      <div className="grid grid-cols-2 gap-2">
-        {post.image_urls.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            className={`w-full h-48 object-cover rounded-lg ${
-              post.image_urls.length === 1 ? "col-span-2 h-auto" : ""
-            }`}
-          />
-        ))}
-      </div>
+      {/* Post Images */}
+      {post.image_urls?.length > 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          {post.image_urls.map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt={`Post image ${index + 1}`}
+              className={`w-full object-cover rounded-lg ${
+                post.image_urls.length === 1 ? "col-span-2 h-auto" : "h-48"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* action button */}
+      {/* Action Buttons */}
       <div className="flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300">
+        {/* Likes */}
         <div className="flex items-center gap-1">
           <Heart
             className={`w-4 h-4 cursor-pointer ${
-              likes.includes(currentUser._id) && "text-red-500 fill-red-500"
+              likes.includes(currentUser?._id)
+                ? "text-red-500 fill-red-500"
+                : ""
             }`}
-            onClick={handleLike()}
+            onClick={handleLike}
           />
           <span>{likes.length}</span>
         </div>
 
+        {/* Comments */}
         <div className="flex items-center gap-1">
           <MessageCircle className="w-4 h-4 cursor-pointer" />
-          <span>{12}</span>
+          <span>{post.comments_count || 0}</span>
         </div>
 
-          <div className="flex items-center gap-1">
+        {/* Shares */}
+        <div className="flex items-center gap-1">
           <Share2 className="w-4 h-4 cursor-pointer" />
-          <span>{7}</span>
+          <span>{post.shares_count || 0}</span>
         </div>
       </div>
     </div>

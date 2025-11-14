@@ -1,6 +1,8 @@
+import { useAuth } from "@clerk/clerk-react";
 import { ArrowLeft, Sparkle, TextIcon, Upload } from "lucide-react";
 import React, { useState } from "react";
-import {toast} from "react-hot-toast";
+import { toast } from "react-hot-toast";
+import api from "../api/axios.js";
 
 const StoryModel = ({ setShowModel, fetchStories }) => {
   const bgColors = [
@@ -17,17 +19,89 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
   const [text, setText] = useState("");
   const [media, setMedia] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const { getToken } = useAuth();
 
+  const MAX_VIDEO_DURATION = 60; // seconds
+  const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB in bytes ✅ fixed
+
+  // ✅ fixed: "URl" typo, duration + file size check
   const handleMediaUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    if (file.type.startsWith("video")) {
+      if (file.size > MAX_VIDEO_SIZE) {
+        toast.error("File size exceeds 50MB. Please upload a smaller video.");
+        setMedia(null);
+        setPreviewUrl(null);
+        return;
+      }
+
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+        if (video.duration > MAX_VIDEO_DURATION) {
+          toast.error("Video duration cannot exceed 1 minute.");
+          setMedia(null);
+          setPreviewUrl(null);
+        } else {
+          setMedia(file);
+          setPreviewUrl(URL.createObjectURL(file));
+          setText("");
+          setMode("media");
+        }
+      };
+
+      video.src = URL.createObjectURL(file);
+    } else if (file.type.startsWith("image")) {
       setMedia(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setText("");
+      setMode("media");
     }
   };
 
+  // ✅ fixed: typos in append + Authorization header + logic cleanup
   const handleCreateStory = async () => {
-    return new Promise((resolve) => setTimeout(resolve, 2000));
+    const media_type =
+      mode === "media"
+        ? media?.type?.startsWith("image")
+          ? "image"
+          : "video"
+        : "text";
+
+    if (media_type === "text" && !text.trim()) {
+      throw new Error("Please enter some text.");
+    }
+
+    const formData = new FormData();
+    formData.append("content", text);
+    formData.append("media_type", media_type);
+    if (media) formData.append("media", media);
+    formData.append("background_color", background);
+
+    const token = await getToken();
+
+    try {
+      const { data } = await api.post("/api/story/create", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (data.success) {
+        toast.success("Story created successfully");
+        setShowModel(false);
+        fetchStories();
+      } else {
+        toast.error(data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to create story");
+    }
   };
 
   return (
@@ -44,6 +118,7 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
           <span className="w-10"></span>
         </div>
 
+        {/* Story Preview */}
         <div
           className="rounded-lg h-96 flex items-center justify-center relative"
           style={{ backgroundColor: background }}
@@ -51,32 +126,49 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
           {mode === "text" && (
             <textarea
               className="bg-transparent text-white w-full h-full p-6 text-lg resize-none focus:outline-none"
-              placeholder="What's on your mind ?"
+              placeholder="What's on your mind?"
               onChange={(e) => setText(e.target.value)}
               value={text}
             />
           )}
 
-          {mode === "media" &&
-            previewUrl &&
-            (media?.type.startsWith("image") ? (
-              <img src={previewUrl} alt="" className="object-contain max-h-full" />
-            ) : (
-              <video src={previewUrl} className="object-contain max-h-full" autoPlay loop muted />
+          {mode === "media" && previewUrl && (
+            <>
+              {media?.type.startsWith("image") ? (
+                <img
+                  src={previewUrl}
+                  alt="preview"
+                  className="object-contain max-h-full"
+                />
+              ) : (
+                <video
+                  src={previewUrl}
+                  className="object-contain max-h-full"
+                  autoPlay
+                  loop
+                  muted
+                  controls
+                />
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Background Colors */}
+        {mode === "text" && (
+          <div className="flex mt-2 gap-2">
+            {bgColors.map((color) => (
+              <button
+                key={color}
+                className="w-6 h-6 rounded-full ring cursor-pointer"
+                style={{ backgroundColor: color }}
+                onClick={() => setBackground(color)}
+              />
             ))}
-        </div>
+          </div>
+        )}
 
-        <div className="flex mt-2 gap-2">
-          {bgColors.map((color) => (
-            <button
-              key={color}
-              className="w-6 h-6 rounded-full ring cursor-pointer"
-              style={{ backgroundColor: color }}
-              onClick={() => setBackground(color)}
-            />
-          ))}
-        </div>
-
+        {/* Mode Selector */}
         <div className="flex gap-2 mt-4">
           <button
             onClick={() => {
@@ -85,7 +177,7 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
               setPreviewUrl(null);
             }}
             className={`flex-1 flex items-center justify-center gap-2 p-2 rounded cursor-pointer ${
-              mode === "text" ? "bg-white text-black" : "bg-zinc-800"
+              mode === "text" ? "bg-white text-black" : "bg-zinc-800 text-white"
             }`}
           >
             <TextIcon size={18} /> Text
@@ -93,14 +185,11 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
 
           <label
             className={`flex-1 flex items-center justify-center gap-2 p-2 rounded cursor-pointer ${
-              mode === "media" ? "bg-white text-black" : "bg-zinc-800"
+              mode === "media" ? "bg-white text-black" : "bg-zinc-800 text-white"
             }`}
           >
             <input
-              onChange={(e) => {
-                handleMediaUpload(e);
-                setMode("media");
-              }}
+              onChange={handleMediaUpload}
               type="file"
               accept="image/*,video/*"
               className="hidden"
@@ -109,12 +198,14 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
           </label>
         </div>
 
+        {/* Submit Button */}
         <button
           onClick={() =>
             toast.promise(handleCreateStory(), {
-              loading: "Saving ...",
-              success: <p>Story Added</p>,
-              error: (e) => <p>{e.message}</p>,
+
+              loading: "Saving...",
+              // success: "Story Added 🎉",
+              error: (e) => e.message,
             })
           }
           className="flex items-center justify-center gap-2 text-white my-3 mt-4 w-full rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition cursor-pointer p-3"

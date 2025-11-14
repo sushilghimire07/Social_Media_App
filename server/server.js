@@ -7,6 +7,7 @@ import userRouter from "./routes/UserRoutes.js";
 import inngestRouter from "./inngest/serve.js";
 import postRounter from "./routes/PostRoute.js";
 import stroyRouter from "./routes/StoryRoutes.js";
+import messagerouter from "./routes/messageRoute.js";
 
 
 
@@ -22,6 +23,7 @@ app.use(inngestRouter);
 app.use("/api/user", userRouter);
 app.use('/api/post',postRounter)
 app.use('/api/story',stroyRouter)
+app.use('/api/messages',messagerouter)
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

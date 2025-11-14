@@ -1,22 +1,53 @@
 import React, { useState } from "react";
-import { dummyUserData } from "../assets/assets";
 import { Pencil } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { updateUser } from "../features/user/userSlice";
+import { useAuth } from "@clerk/clerk-react";
+import { toast } from "react-hot-toast";
 
 const ProfileModel = ({ setShowEdit }) => {
-  const user = dummyUserData;
+  const dispatch = useDispatch();
+  const { getToken } = useAuth();
+  const user = useSelector((state) => state.user.value);
+
   const [editForm, setEditForm] = useState({
-    username: user.username,
-    bio: user.bio,
-    location: user.location,
+    username: user.username || "",
+    bio: user.bio || "",
+    location: user.location || "",
     profile_picture: null,
-    full_name: user.full_name,
+    full_name: user.full_name || "",
     cover_photo: null,
   });
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    console.log("Saved profile data:", editForm);
-    setShowEdit(false); // Close modal after saving
+    try {
+      const userData = new FormData();
+      const { full_name, username, bio, location, profile_picture, cover_photo } = editForm;
+
+      userData.append("full_name", full_name);
+      userData.append("username", username);
+      userData.append("bio", bio);
+      userData.append("location", location);
+
+      if (profile_picture) userData.append("profile_picture", profile_picture);
+      if (cover_photo) userData.append("cover_photo", cover_photo);
+
+      const token = await getToken();
+
+      toast.promise(
+        dispatch(updateUser({ userData, token })),
+        {
+          loading: "Saving profile...",
+          success: "Profile updated successfully!",
+          error: "Failed to update profile.",
+        }
+      );
+
+      setShowEdit(false);
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (

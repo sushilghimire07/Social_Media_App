@@ -1,7 +1,7 @@
 // middleware/auth.js
 export const protect = async (req, res, next) => {
   try {
-    if (!req.auth) {
+    if (!req.auth()) {
       return res.status(401).json({ success: false, message: "Auth middleware not setup" });
     }
 

@@ -1,5 +1,6 @@
 import multer from "multer";
 
-const storage = multer.diskStorage({})
+// Temporary storage in memory or disk
+const storage = multer.diskStorage({}); // you can customize if needed
 
-export const upload = multer({storage}) 
+export const upload = multer({ storage });

@@ -20,11 +20,7 @@ const postSchema = new mongoose.Schema({
     enum: ["text", "image", "text_with_image"],
     required: true,
   },
-
-  likes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  }],
+likes: [{ type: String, ref: "User" }],
   
 }, { timestamps: true, minimize: false });
 
