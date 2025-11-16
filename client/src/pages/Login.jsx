@@ -31,7 +31,7 @@ const Layout = () => {
                     />
                   ))}
               </div>
-              <p>Used by 12k+ developers</p>
+              <p>Used by TOPIBAZZ PEOPLE</p>
             </div>
           </div>
           <h1
