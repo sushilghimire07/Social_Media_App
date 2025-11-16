@@ -49,7 +49,7 @@ const CreatePost = () => {
       });
 
       if (data.success) {
-        toast.success("Post added successfully!");
+        // toast.success("Post added successfully!");
         navigate("/");
       } else {
         console.log(data.message);
