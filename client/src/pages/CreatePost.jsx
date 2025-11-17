@@ -149,7 +149,7 @@ const CreatePost = () => {
               onClick={() =>
                 toast.promise(handleSubmit(), {
                   loading: "Uploading ...",
-                  success: "Post added!",
+                  // success: "Post added!",
                   error: "Post not added",
                 })
               }
