@@ -75,7 +75,6 @@ const App = () => {
 
           const currentChatId = pathnameRef.current.split("/messages/")[1];
 
-          // If user is currently chatting with this user
           if (
             currentChatId &&
             (currentChatId === messageData.from_user_id ||
@@ -96,7 +95,6 @@ const App = () => {
 
     initSSE();
 
-    // Cleanup connection on unmount
     return () => {
       if (eventSource) {
         eventSource.close();

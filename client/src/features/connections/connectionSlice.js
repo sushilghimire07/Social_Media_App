@@ -13,9 +13,9 @@ export const fetchConnection = createAsyncThunk(
   async (token) => {
     const { data } = await api.post(
       "/api/user/get", // backend expects POST /get
-      {}, // empty body
+      {},
       {
-        headers: { Authorization: `Bearer ${token}` }, // correct place for headers
+        headers: { Authorization: `Bearer ${token}` }, 
       }
     );
     return data.success ? data : null;
