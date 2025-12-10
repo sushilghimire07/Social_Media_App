@@ -20,12 +20,11 @@ const ChatBox = () => {
 
   const messageEndRef = useRef(null);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Fetch messages
+
   const fetchUserMessages = async () => {
     try {
       const token = await getToken();
@@ -152,7 +151,7 @@ const ChatBox = () => {
                 className="h-8 w-8 rounded object-cover"
               />
             ) : (
-              <ImageIcon className="w-6 h-6 text-gray-500" />
+              <ImageIcon className="w-6 h-6 text-gray-400" />
             )}
             <input
               type="file"
@@ -164,7 +163,7 @@ const ChatBox = () => {
 
           <button
             onClick={sendMessage}
-            className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full active:scale-95 transition"
+            className="p-2 bg-gradient-to-br from-indigo-450 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full active:scale-95 transition"
           >
             <SendHorizonalIcon className="w-6 h-6" />
           </button>

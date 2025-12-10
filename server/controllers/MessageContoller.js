@@ -85,35 +85,6 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-// ---------------- GET CHAT MESSAGES ----------------
-export const getChatMessages = async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { to_user_id } = req.body;
-
-    const messages = await Message.find({
-      $or: [
-        { from_user_id: userId, to_user_id },
-        { from_user_id: to_user_id, to_user_id: userId },
-      ],
-    }).sort({ createdAt: 1 });
-
-    // Mark as seen
-    await Message.updateMany(
-      { from_user_id: to_user_id, to_user_id: userId, seen: false },
-      { seen: true }
-    );
-
-    res.json({ success: true, messages });
-
-  } catch (error) {
-    console.error("Chat Fetch Error:", error);
-    res.json({ success: false, message: error.message });
-  }
-};
 export const getRecentMessages = async (req, res) => {
   try {
     const userId = req.auth().userId;
@@ -145,5 +116,33 @@ export const getRecentMessages = async (req, res) => {
   } catch (error) {
     console.error("❌ Recent Messages Error:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// ---------------- GET CHAT MESSAGES ----------------
+export const getChatMessages = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { to_user_id } = req.body;
+
+    const messages = await Message.find({
+      $or: [
+        { from_user_id: userId, to_user_id },
+        { from_user_id: to_user_id, to_user_id: userId },
+      ],
+    }).sort({ createdAt: 1 });
+
+    // Mark as seen
+    await Message.updateMany(
+      { from_user_id: to_user_id, to_user_id: userId, seen: false },
+      { seen: true }
+    );
+
+    res.json({ success: true, messages });
+
+  } catch (error) {
+    console.error("Chat Fetch Error:", error);
+    res.json({ success: false, message: error.message });
   }
 };

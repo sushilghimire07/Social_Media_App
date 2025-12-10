@@ -8,8 +8,10 @@ const messagerouter = express.Router();
 // SSE - NO PROTECT
 messagerouter.get("/sse", seeController);
 
-messagerouter.post("/send", protect, upload.single("image"), sendMessage);
+
 messagerouter.post("/get", protect, getChatMessages);
 messagerouter.get("/recent", protect, getRecentMessages);
+messagerouter.post("/send", protect, upload.single("image"), sendMessage);
+
 
 export default messagerouter;
