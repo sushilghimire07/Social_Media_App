@@ -19,6 +19,7 @@ const PostCard = ({ post }) => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
 
+
   const handleLike = async () => {
     try {
       const token = await getToken();
@@ -28,6 +29,7 @@ const PostCard = ({ post }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+
       if (data.success) {
         toast.success(data.message || "Post liked!");
         setLikes((prev) =>
@@ -35,12 +37,15 @@ const PostCard = ({ post }) => {
             ? prev.filter((id) => id !== currentUser._id)
             : [...prev, currentUser._id]
         );
+
       } else {
-        toast.error(data.message || "Could not like post");
+        toast.error(data.message || "You could not like post");
       }
+
     } catch (error) {
       toast.error(error.message);
     }
+
   };
 
   return (
