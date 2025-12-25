@@ -6,7 +6,6 @@ import User from "../models/User.js";
 // ---------------- ACTIVE CONNECTIONS ----------------
 const connections = {};
 
-
 // =================== HELPER FUNCTIONS ===================
 
 // Send SSE event to a specific user
@@ -28,7 +27,6 @@ const uploadImage = async (file) => {
 
   return imagekit.url({ path: uploaded.filePath });
 };
-
 
 // =================== SSE CONTROLLER ===================
 export const seeController = async (req, res) => {
@@ -58,7 +56,6 @@ export const seeController = async (req, res) => {
     res.status(500).end();
   }
 };
-
 
 // =================== SEND MESSAGE ===================
 export const sendMessage = async (req, res) => {
@@ -93,7 +90,6 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // =================== GET RECENT CHATS ===================
 export const getRecentMessages = async (req, res) => {
@@ -133,7 +129,6 @@ export const getRecentMessages = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // =================== GET CHAT MESSAGES ===================
 export const getChatMessages = async (req, res) => {
