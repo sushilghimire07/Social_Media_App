@@ -144,6 +144,7 @@ const CreatePost = () => {
               onChange={(e) => setImages([...images, ...e.target.files])}
             />
 
+
             <button
               disabled={loading}
               onClick={() =>
@@ -160,8 +161,10 @@ const CreatePost = () => {
           </div>
         </div>
       </div>
+      
     </div>
   );
+
 };
 
 export default CreatePost;
