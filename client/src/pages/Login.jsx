@@ -48,9 +48,11 @@ const Layout = () => {
             Connect with global community on TOPIBAZZ
           </p>
 
-          
+
         </div>
+
         <span className="md:h-10"></span>
+        
       </div>
          
          {/* Right side login form */}
