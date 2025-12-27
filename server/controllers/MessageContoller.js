@@ -3,61 +3,74 @@ import imagekit from "../configs/imageKit.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 
-// ---------------- ACTIVE CONNECTIONS ----------------
-const connections = {};
+/* =====================================================
+   ACTIVE SSE CONNECTIONS
+===================================================== */
+const connections = new Map();
 
-// =================== HELPER FUNCTIONS ===================
+/* =====================================================
+   HELPER FUNCTIONS
+===================================================== */
 
-// Send SSE event to a specific user
-const sendToUser = (userId, data) => {
-  const conn = connections[userId];
-  if (conn) conn.write(`data: ${JSON.stringify(data)}\n\n`);
+// Send SSE event to specific user
+const sendToUser = (userId, payload) => {
+  const connection = connections.get(userId);
+  if (!connection) return;
+
+  connection.write(`data: ${JSON.stringify(payload)}\n\n`);
 };
 
 // Upload image to ImageKit
 const uploadImage = async (file) => {
-  const buffer = fs.readFileSync(file.path);
+  try {
+    const buffer = fs.readFileSync(file.path);
 
-  const uploaded = await imagekit.upload({
-    file: buffer,
-    fileName: file.originalname,
-  });
+    const uploaded = await imagekit.upload({
+      file: buffer,
+      fileName: file.originalname,
+    });
 
-  fs.unlinkSync(file.path);
-
-  return imagekit.url({ path: uploaded.filePath });
+    return imagekit.url({ path: uploaded.filePath });
+  } finally {
+    // Always remove temp file
+    fs.existsSync(file.path) && fs.unlinkSync(file.path);
+  }
 };
 
-// =================== SSE CONTROLLER ===================
-export const seeController = async (req, res) => {
+/* =====================================================
+   SSE CONTROLLER
+===================================================== */
+export const sseController = async (req, res) => {
   try {
     const { userId } = await req.auth();
     if (!userId) return res.status(401).end();
 
     // SSE Headers
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.set({
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    });
 
-    connections[userId] = res;
+    connections.set(userId, res);
 
-    // Notify frontend
     sendToUser(userId, { connected: true });
-
     console.log("🟢 SSE Connected:", userId);
 
     req.on("close", () => {
-      delete connections[userId];
+      connections.delete(userId);
       console.log("🔴 SSE Disconnected:", userId);
     });
-  } catch (err) {
-    console.error("SSE Error:", err);
+  } catch (error) {
+    console.error("SSE Error:", error);
     res.status(500).end();
   }
 };
 
-// =================== SEND MESSAGE ===================
+/* =====================================================
+   SEND MESSAGE
+===================================================== */
 export const sendMessage = async (req, res) => {
   try {
     const from_user_id = req.userId;
@@ -65,10 +78,11 @@ export const sendMessage = async (req, res) => {
     const file = req.file;
 
     let media_url = "";
-    let message_type = file ? "image" : "text";
+    const message_type = file ? "image" : "text";
 
-    // Upload image if exists
-    if (file) media_url = await uploadImage(file);
+    if (file) {
+      media_url = await uploadImage(file);
+    }
 
     const message = await Message.create({
       from_user_id,
@@ -78,7 +92,7 @@ export const sendMessage = async (req, res) => {
       media_url,
     });
 
-    // Send SSE to both sender and receiver
+    // Notify both users
     sendToUser(from_user_id, message);
     sendToUser(to_user_id, message);
 
@@ -87,11 +101,16 @@ export const sendMessage = async (req, res) => {
     res.json({ success: true, message });
   } catch (error) {
     console.error("Send Message Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// =================== GET RECENT CHATS ===================
+/* =====================================================
+   GET RECENT CHATS
+===================================================== */
 export const getRecentMessages = async (req, res) => {
   try {
     const userId = req.userId;
@@ -102,35 +121,41 @@ export const getRecentMessages = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const recentChats = [];
-    const added = new Set();
+    const recentChatsMap = new Map();
 
     for (const msg of messages) {
       const otherUserId =
         msg.from_user_id === userId ? msg.to_user_id : msg.from_user_id;
 
-      if (added.has(otherUserId)) continue;
-      added.add(otherUserId);
+      if (recentChatsMap.has(otherUserId)) continue;
 
-      const userObj = await User.findById(otherUserId).select(
+      const user = await User.findById(otherUserId).select(
         "_id full_name profile_picture"
       );
 
-      recentChats.push({
+      recentChatsMap.set(otherUserId, {
         userId: otherUserId,
-        user: userObj,
+        user,
         lastMessage: msg,
       });
     }
 
-    res.json({ success: true, recentChats });
+    res.json({
+      success: true,
+      recentChats: Array.from(recentChatsMap.values()),
+    });
   } catch (error) {
     console.error("❌ Recent Messages Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// =================== GET CHAT MESSAGES ===================
+/* =====================================================
+   GET CHAT MESSAGES
+===================================================== */
 export const getChatMessages = async (req, res) => {
   try {
     const userId = req.userId;
@@ -145,13 +170,20 @@ export const getChatMessages = async (req, res) => {
 
     // Mark messages as seen
     await Message.updateMany(
-      { from_user_id: to_user_id, to_user_id: userId, seen: false },
+      {
+        from_user_id: to_user_id,
+        to_user_id: userId,
+        seen: false,
+      },
       { seen: true }
     );
 
     res.json({ success: true, messages });
   } catch (error) {
     console.error("Chat Fetch Error:", error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

@@ -17,4 +17,5 @@ export const protect = async (req, res, next) => {
       .status(401)
       .json({ success: false, message: "Authentication failed" });
   }
+  
 };
