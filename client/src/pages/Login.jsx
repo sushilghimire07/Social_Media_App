@@ -42,9 +42,13 @@ const Layout = () => {
             More than just friends, truly connect
           </h1>
           
+
+
           <p className="text-xl md:text-3xl text-indigo-900 max-w-72">
             Connect with global community on TOPIBAZZ
           </p>
+
+          
         </div>
         <span className="md:h-10"></span>
       </div>
