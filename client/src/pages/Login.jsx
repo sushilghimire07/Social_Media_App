@@ -52,7 +52,7 @@ const Layout = () => {
         </div>
 
         <span className="md:h-10"></span>
-        
+
       </div>
          
          {/* Right side login form */}
@@ -61,6 +61,7 @@ const Layout = () => {
 
 
          </div>
+         
     </div>
   );
 };
