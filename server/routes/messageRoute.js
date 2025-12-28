@@ -1,12 +1,12 @@
 import express from "express";
-import { seeController, sendMessage, getChatMessages, getRecentMessages } from "../controllers/MessageContoller.js";
+import {  sendMessage, getChatMessages, getRecentMessages } from "../controllers/MessageContoller.js";
 import { upload } from "../configs/multer.js";
 import { protect } from "../middleware/auth.js";
 
 const messagerouter = express.Router();
 
 // SSE - NO PROTECT
-messagerouter.get("/sse", seeController);
+// messagerouter.get("/sse", seeController);
 
 
 messagerouter.post("/get", protect, getChatMessages);
