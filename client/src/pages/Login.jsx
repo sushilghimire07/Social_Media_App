@@ -54,6 +54,7 @@ const Layout = () => {
         <span className="md:h-10"></span>
 
       </div>
+      
          
          {/* Right side login form */}
          <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
