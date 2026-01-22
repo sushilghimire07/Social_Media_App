@@ -11,7 +11,7 @@ const PostCard = ({ post }) => {
   const postWithHashtags = (content) =>
     content.replace(
       /(#\w+)/g,
-      '<span class="text-indigo-600 font-semibold">$1</span>'
+      '<span class="text-indigo-600 font-semibold">$1</span>',
     );
 
   const [likes, setLikes] = useState(post.likes_count || []);
@@ -19,33 +19,28 @@ const PostCard = ({ post }) => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
 
-
   const handleLike = async () => {
     try {
       const token = await getToken();
       const { data } = await api.post(
         "/api/post/like",
         { postId: post._id },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
 
       if (data.success) {
         toast.success(data.message || "Post liked!");
         setLikes((prev) =>
           prev.includes(currentUser._id)
             ? prev.filter((id) => id !== currentUser._id)
-            : [...prev, currentUser._id]
+            : [...prev, currentUser._id],
         );
-
       } else {
         toast.error(data.message || "You could not like post");
       }
-
     } catch (error) {
       toast.error(error.message);
     }
-
   };
 
   return (

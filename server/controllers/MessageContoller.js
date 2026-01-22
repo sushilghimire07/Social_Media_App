@@ -130,7 +130,7 @@ export const getRecentMessages = async (req, res) => {
       if (recentChatsMap.has(otherUserId)) continue;
 
       const user = await User.findById(otherUserId).select(
-        "_id full_name profile_picture"
+        "_id full_name profile_picture",
       );
 
       recentChatsMap.set(otherUserId, {
@@ -175,7 +175,7 @@ export const getChatMessages = async (req, res) => {
         to_user_id: userId,
         seen: false,
       },
-      { seen: true }
+      { seen: true },
     );
 
     res.json({ success: true, messages });

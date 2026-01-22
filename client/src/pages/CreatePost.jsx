@@ -156,7 +156,7 @@ const CreatePost = () => {
                   // success: "Post added!",
                   error: "Post not added",
                 })
-              }
+              }f
 
               className="text-sm bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white font-medium px-8 py-2 rounded-md cursor-pointer"
             >
